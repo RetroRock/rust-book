@@ -129,34 +129,4 @@ fn main() {
    // the standard library. Crates for this are available on crates.io
    
    // But be sure to remember that valid Unicode scalar values may be made up of more than 1 byte
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
