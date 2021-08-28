@@ -15,7 +15,15 @@ fn main() {
     let mode = get_mode(&vectr);
     println!("Mode: {}", mode);
     let pig_latin = convert_pig_latin(&String::from("This is some text"));
-    println!("Pig latin text: {}", pig_latin)
+    println!("Pig latin text: {}", pig_latin);
+
+    let mut banana_farm = Company::create_company();
+    banana_farm.add_employee_to_department(String::from("IT"), String::from("Susanne"));
+    banana_farm.add_employee_to_department(String::from("IT"), String::from("Anna"));
+    let it = banana_farm.get_employees_of_department(&String::from("IT"));
+    println!("IT department: {:?}", it);
+    let all_employees = banana_farm.get_all_employees_by_department();
+    println!("All employees {:#?}", all_employees);
 }
 
 fn get_average(arr: &Vec<i32>) -> i32 {
@@ -30,6 +38,7 @@ fn get_median(arr: &Vec<i32>) -> i32 {
     sort_slow(arr)[(arr.len() / 2) as usize]
 }
 
+// bubble sort, I think
 fn sort_slow(arr: &Vec<i32>) -> Vec<i32> {
     let mut sorted: Vec<i32> = arr.to_vec();
     let mut swaps = 1;
@@ -69,10 +78,6 @@ fn get_mode(arr: &Vec<i32>) -> i32 {
     most_common_element
 }
 
-pub enum Consonants {
-    t(String),
-}
-
 fn convert_pig_latin(text: &String) -> String {
     let mut pig_latin = String::from("");
     for word in text.split_whitespace() {
@@ -99,4 +104,31 @@ fn convert_pig_latin(text: &String) -> String {
         pig_latin = pig_latin + &new_word + " ";
     }
     pig_latin
+}
+
+struct Company {
+    departments: HashMap<String, Vec<String>>,
+}
+
+impl Company {
+    fn create_company() -> Company {
+        Company {
+            departments: HashMap::new(),
+        }
+    }
+    fn add_employee_to_department(&mut self, department: String, employee_name: String) {
+        let employees = self.departments.entry(department).or_insert(Vec::new());
+        employees.push(employee_name);
+    }
+    fn get_employees_of_department(&mut self, department: &String) -> &Vec<String> {
+        let employees = self
+            .departments
+            .entry(department.to_string())
+            .or_insert(Vec::new());
+        employees.sort();
+        employees
+    }
+    fn get_all_employees_by_department(&mut self) -> &HashMap<String, Vec<String>> {
+        &self.departments
+    }
 }
