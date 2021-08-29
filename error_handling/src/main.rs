@@ -132,3 +132,20 @@ fn read_username_from_file_even_shorter() -> Result<String, io::Error> {
 fn read_username_from_file_even_even_shorter() -> Result<String, io::Error> {
     fs::read_to_string("hello.txt")
 }
+
+// Docs: https://doc.rust-lang.org/stable/book/ch09-03-to-panic-or-not-to-panic.html
+pub struct Guess {
+    value: i32, // value is private, therefore getter (value)
+}
+
+impl Guess {
+    pub fn new(value: i32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("Guess value must be between 1 and 100, got {}.", value);
+        }
+        Guess { value }
+    }
+    pub fn value(&self) -> i32 {
+        self.value
+    }
+}
