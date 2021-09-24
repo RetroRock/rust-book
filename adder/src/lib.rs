@@ -12,11 +12,15 @@ impl Rectangle {
 }
 
 pub fn add_two(a: i32) -> i32 {
-    a + 3
+    a + 2
 }
 
 pub fn greeting(name: &str) -> String {
     format!("Hello {}!", name)
+}
+
+fn internal_adder(a: i32, b: i32) -> i32 {
+    a + b
 }
 
 pub struct Guess {
@@ -28,9 +32,9 @@ pub struct Guess2 {
 
 impl Guess {
     pub fn new(value: i32) -> Guess {
-        // if value < 1 || value > 100 {
-        //     panic!("Guess value must be between 1 and 100, got {}.", value);
-        // }
+        if value < 1 || value > 100 {
+            panic!("Guess value must be between 1 and 100, got {}.", value);
+        }
 
         Guess { value }
     }
@@ -53,7 +57,8 @@ impl Guess2 {
         Guess { value }
     }
 }
-
+// Configuration option (only for unit tests, because integration tests are in a seperate directory)
+// Means, that this is only compiled, when cargo test is run
 #[cfg(test)]
 mod tests {
     // Visibility rules of mods -> bring outer code into inner scope
@@ -141,6 +146,13 @@ mod tests {
         } else {
             Err(String::from("two plus two does not equeal four"))
         }
+    }
+
+    // ! Test Private Functions
+    #[test]
+    fn internal() {
+        // internal_adder is not pub
+        assert_eq!(4, internal_adder(2, 2));
     }
 }
 
