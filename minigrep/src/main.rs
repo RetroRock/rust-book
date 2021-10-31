@@ -20,15 +20,20 @@ fn main() {
     // let (query, filename) = parse_config(&args);
     // let config = parse_config(&args);
     // let config = Config::new(&args);
-    let config = Config::new(&args).unwrap_or_else(|err| {
-        // Print Errors to Standard Error (Error Stream)
-        // Command line programs are expected to send error messages to the standard error stream
-        // so we can still see error messages on the screen
-        // even if we redirect the standard output stream to a file.
+    // let config = Config::new(&args).unwrap_or_else(|err| {
+    //     // Print Errors to Standard Error (Error Stream)
+    //     // Command line programs are expected to send error messages to the standard error stream
+    //     // so we can still see error messages on the screen
+    //     // even if we redirect the standard output stream to a file.
+    //     eprintln!("Problem parsing arguments: {}", err);
+    //     // Signal to the process that called our program, that the program exited with an error state
+    //     // 0 == ok
+    //     // similar to panic! but without all the extra output
+    //     process::exit(1);
+    // });
+
+    let config = Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
-        // Signal to the process that called our program, that the program exited with an error state
-        // 0 == ok
-        // similar to panic! but without all the extra output
         process::exit(1);
     });
 
