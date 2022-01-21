@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "closures"
+name = "customizing_builds_with_release_profiles"
 version = "0.1.0"

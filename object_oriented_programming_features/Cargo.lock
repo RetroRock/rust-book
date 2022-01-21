@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "closures"
+name = "object_oriented_programming_features"
 version = "0.1.0"
