@@ -1,6 +1,6 @@
 // Docs: https://doc.rust-lang.org/stable/book/ch17-03-oo-design-patterns.html#encoding-states-and-behavior-as-types
 
-// Better than object oriendted implementation, the transformations between states
+// Better than object oriented implementation, the transformations between states
 // are no longer encapsulated entirely within the Post implementation
 // However, our gain is that invalid states are now impossible because of the type system
 // and type checking that happens at compile time (no trait objects)
