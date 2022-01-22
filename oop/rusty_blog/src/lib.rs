@@ -35,44 +35,35 @@ impl DraftPost {
         self.content.push_str(text);
     }
 
-    pub fn request_review(self) -> PendingReviewOnePost {
+    pub fn request_review(self) -> PendingReviewPost {
         // Consume self to 'destroy' Draft Post State
-        PendingReviewOnePost {
+        PendingReviewPost {
             content: self.content,
+            approved: false,
         }
     }
 }
 
-// TODO: Fix duplication
-pub struct PendingReviewOnePost {
+pub enum TypeOr<PendingReviewPost, Post> {
+    PendingReviewPost(PendingReviewPost),
+    Post(Post),
+}
+
+pub struct PendingReviewPost {
     content: String,
+    approved: bool,
 }
 
-impl PendingReviewOnePost {
-    // Reveal content only after it has been approved
-    // Consume self to 'destroy' Pending Review State
-    pub fn approve(self) -> PendingReviewTwoPost {
-        PendingReviewTwoPost {
-            content: self.content,
-        }
-    }
-
-    pub fn reject(self) -> DraftPost {
-        DraftPost {
-            content: self.content,
-        }
-    }
-}
-pub struct PendingReviewTwoPost {
-    content: String,
-}
-
-impl PendingReviewTwoPost {
-    // Reveal content only after it has been approved
-    // Consume self to 'destroy' Pending Review State
-    pub fn approve(self) -> Post {
-        Post {
-            content: self.content,
+impl PendingReviewPost {
+    pub fn approve(self) -> TypeOr<PendingReviewPost, Post> {
+        match self.approved {
+            false => TypeOr::PendingReviewPost(PendingReviewPost {
+                content: self.content,
+                approved: true,
+            }),
+            true => TypeOr::Post(Post {
+                content: self.content,
+            }),
         }
     }
 

@@ -1,4 +1,4 @@
-use rusty_blog::Post;
+use rusty_blog::{Post, TypeOr};
 
 fn main() {
     // DraftPost
@@ -9,8 +9,14 @@ fn main() {
     // PendingReviewPost
     let post = post.request_review();
 
-    // Post (for production)
-    let post = post.approve().approve();
+    // Require two approvals
+    let mut post = post.approve();
 
-    assert_eq!("I ate a salad for lunch today", post.content());
+    if let TypeOr::PendingReviewPost(value) = post {
+        post = value.approve();
+    };
+
+    if let TypeOr::Post(value) = post {
+        assert_eq!("I ate a salad for lunch today", value.content());
+    };
 }
