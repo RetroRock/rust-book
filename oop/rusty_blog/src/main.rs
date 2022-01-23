@@ -3,9 +3,7 @@ use rusty_blog::{Post, TypeOr};
 fn main() {
     // DraftPost
     let mut post = Post::new();
-
     post.add_text("I ate a salad for lunch today");
-
     // PendingReviewPost
     let post = post.request_review();
 
