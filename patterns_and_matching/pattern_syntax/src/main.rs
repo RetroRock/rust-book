@@ -20,6 +20,12 @@ fn main() {
     ignoring_parts_of_a_value_with_a_nested_();
 
     ignoring_unused_variables_with_();
+
+    ignoring_remaining_parts_of_value_with_dotdot();
+
+    extra_conditionals_with_match_guards();
+
+    at_bindings();
 }
 
 fn matching_literals() {
@@ -209,4 +215,65 @@ fn ignoring_remaining_parts_of_value_with_dotdot() {
     // println!("Some numbers: {}", second);
     // }
     // }
+}
+
+fn extra_conditionals_with_match_guards() {
+    let num = Some(4);
+
+    // match guard if x < 5
+    match num {
+        Some(x) if x < 5 => println!("less than five: {}", x),
+        Some(x) => println!("{}", x),
+        None => (),
+    }
+
+    let x = Some(5);
+    let y = 10;
+
+    // Use match guards to solve pattern-shadowing (if let _s = s)
+    match x {
+        Some(50) => println!("Got 50"),
+        Some(n) if n == y => println!("Matched, n = {}", n),
+        _ => println!("Default case, x = {:?}", x),
+    }
+
+    // Can use x here, because it hasn't been moved into a new variable (shadowed)
+    println!("at the end: x = {:?}, y = {}", x, y);
+
+    // Use | (or) operator to to specify multiple patterns
+    let x = 4;
+    let y = false;
+
+    match x {
+        // x matches 4 but the match guard if y is false, so first arm is not chosen
+        4 | 5 | 6 if y => println!("yes"),
+        // = (4 | 5 | 6) if y => ... , does not match y has precedence
+        // 4 | 5 | (6 if y) => ... // matches
+        _ => println!("no"),
+    }
+}
+
+enum NewMessage {
+    Hello { id: i32 },
+}
+
+// @ to create variable that holds a value at the same time the value is tested
+// for a pattern
+// Using @ lets us test a value and save it in a variable within one pattern
+fn at_bindings() {
+    let msg = NewMessage::Hello { id: 5 };
+
+    match msg {
+        // See if id is in range 3..7 and bind its value to id_variable so that it can be used in match arm
+        NewMessage::Hello {
+            id: id_variable @ 3..=7,
+        } => println!("Found an id in range {}", id_variable),
+        // See if id is in range 10..12, id is not being saved as variable => not available in match arm
+        NewMessage::Hello { id: 10..=12 } => {
+            println!("Found an id in another range")
+        }
+        // Value id is available because of the struct field shorthand syntax id: id
+        // Value can only be assigned to a variable and tested with the @ binding
+        NewMessage::Hello { id } => println!("Found some other id: {}", id),
+    }
 }
