@@ -6,6 +6,6 @@ This project should help me in the future to refresh my knowledge about certain 
 
 ```Rust
 fn main() {
-    println!("Have fun fellow Rustacean!");
+    println!("Have fun, my fellow Rustacean!");
 }
 ```
