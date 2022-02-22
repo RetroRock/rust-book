@@ -81,10 +81,51 @@ fn main() {
 // sequence: it will replace the invalid sequence with �, the U+FFFD REPLACEMENT CHARACTER.
 // We might see replacement characters for characters in the buffer that aren't filled by request
 // data.
+
 fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 1024];
 
     stream.read(&mut buffer).unwrap();
 
     println!("Request: {}", String::from_utf8_lossy(&buffer[..]));
+
+    let response = "HTTP/1.1 200 OK\r\n\r\n";
+
+    stream.write(response.as_bytes()).unwrap();
+    stream.flush().unwrap();
 }
+
+// A closer Look at an HTTP Request
+
+// HTTP is a text-based protocol, and a request takes this format:
+//  Method Request-URI HTTP-Version CRLF
+//  headers CRLF
+//  message-body
+
+// The first line is the request that holds information about what the client is requesting
+// The method being used is GET
+
+// Next part of the request line is /, which indicates the Unifrom Resource Identifier (URI)
+// the client is requesting: URI almost, but not quite, the same as a Uniform Resource Locator
+// (URL)
+
+// The last part is the HTTP version the client uses, and then the request line ends in a CRLF
+// sequence Carriage Return and Linfe Feed, which are terms from typewriter days)
+// The CRLF can also be written as \r\n, \r being the carriage return and \n the line feed.
+// The CRLF sequence separates the request line form the rest of the data.
+
+// Writing a Response
+
+// Responses have the following format:
+//  HTTP-Version Status-Code Reason-Phrase CRLF
+//  headers CRLF
+//  message-body
+// Example:
+//  HTTP/1.1 200 OK\r\n\r\n
+
+// as_bytes to convert string data to bytes
+// write method on stream takes a &[u8] and sends those bytes directly down the connection
+// because the write operation could fail, we use uunwrap on any error result as before.
+// flush will wait and prevent the program from continuing until all the butes are written to the
+// connection
+// TcpStream contains an internal buffer to minimize calls to the underlying operating system
