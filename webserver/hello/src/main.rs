@@ -11,6 +11,7 @@
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::fs;
 
 fn main() {
     // 7878 is "rust" typed on a telephone
@@ -82,18 +83,29 @@ fn main() {
 // We might see replacement characters for characters in the buffer that aren't filled by request
 // data.
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection_simple(mut stream: TcpStream) {
     let mut buffer = [0; 1024];
 
     stream.read(&mut buffer).unwrap();
 
     println!("Request: {}", String::from_utf8_lossy(&buffer[..]));
 
-    let response = "HTTP/1.1 200 OK\r\n\r\n";
+    // Returning Real HTML
+    let contents = fs::read_to_string("hello.html").unwrap();
+
+    // let response = "HTTP/1.1 200 OK\r\n\r\n";
+
+    // Add Content-Length to ensure a valid response
+    let response = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}", 
+        contents.len(),
+        contents
+    );
 
     stream.write(response.as_bytes()).unwrap();
     stream.flush().unwrap();
 }
+
 
 // A closer Look at an HTTP Request
 
@@ -129,3 +141,75 @@ fn handle_connection(mut stream: TcpStream) {
 // flush will wait and prevent the program from continuing until all the butes are written to the
 // connection
 // TcpStream contains an internal buffer to minimize calls to the underlying operating system
+
+// Validating the Request and Selectively Responding
+
+fn handle_connection_okish(mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).unwrap();
+
+    // Hardcode data data corresponding to / request into get variable
+    // Because we're reading raw bytes into the buffer, we transform get into a byte string by
+    // adding the b"" bytes string syntax at the start of the content data
+    let get = b"GET / HTTP/1.1\r\n";
+
+    // We check whether buffer starts with the bytes in get, it means we've received some other
+    // request.
+    if buffer.starts_with(get) {
+        let contents = fs::read_to_string("hello.html").unwrap();
+
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}", 
+            contents.len(),
+            contents
+        );
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    } else {
+        let status_line = "HTTP/1.1 404 NOT FOUND";
+        let contents = fs::read_to_string("404.html").unwrap();
+
+        let response = format!(
+            "{}r\nContent-Length: {}\r\n\r\n{}",
+            status_line,
+            contents.len(),
+            contents
+        );
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    }
+}
+
+// Refactoring
+
+fn handle_connection(mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).unwrap();
+
+    let get = b"GET / HTTP/1.1\r\n";
+
+    let (status_line, filename) = if buffer.starts_with(get) {
+        ("HTTP/1.1 200 OK", "hello.html")
+    } else {
+        ("HTTP/1.1 404 NOT FOUND", "404.html")
+    };
+
+    let contents = fs::read_to_string(filename).unwrap();
+
+    let response = format!(
+        "{}\r\nContent-Length: {}\r\n\r\n{}",
+        status_line,
+        contents.len(),
+        contents
+    );
+
+    stream.write(response.as_bytes()).unwrap();
+    stream.flush().unwrap();
+}
+
+// Now the if and else blocs only return the appropirate values for the status and filename in a
+// tuple; we then use destructuring to assign these values to status_line aned filename in the let
+// statement, as discussed in chapter 18
+
