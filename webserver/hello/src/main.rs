@@ -12,6 +12,8 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::fs;
+use std::thread;
+use std::time::Duration;
 
 fn main() {
     // 7878 is "rust" typed on a telephone
@@ -20,23 +22,23 @@ fn main() {
     // For example listening on port 80 requires administrative privileges, 
     // nonadministrives can listen on ports higher than 1023
     // unwrap just stops program
-    
+
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-    
+
     // incoming method retuns an iterator that gives us a sequence of streams (of type TcpStream)
     // A single stream represents an open connection between the client and the server. 
     // A connection is the name for the full request and response process in which a client connects
     // to the server, the server generates a response, and the server closes the connection
     // TcpStream will read from itself to see what the client sent and then allow us to write our
     // response to the stream
-    
+
     // Overall, this for loop will process each connection in turn and produce a series of streams
     // for us to handle
     // We might receive erros from the incoming method when a client connects to the sever,
     // because we're acutally iterating over connection attempts, not connections
     // Also, depending on the operating system, the number of simultanenous open connections 
     // can be limited to number
-    
+
     // When opening 127.0.0.1:7878 in the browser, the browser shows an error message like
     // "Connection reset", because the server isn't currently sending back any data,
     // but the terminal should show "Connection established!"
@@ -46,7 +48,7 @@ fn main() {
     // server isn't responding with any data.
     // When stream goes out of scope and is dropped at the end of the loop, the connection is
     // closed as part of the drop implementation
-    
+
     // Reading the Request
     // Separating the concerns of first getting a connection and then taking some action with the
     // connection by creating a new function for processing connections
@@ -189,8 +191,12 @@ fn handle_connection(mut stream: TcpStream) {
     stream.read(&mut buffer).unwrap();
 
     let get = b"GET / HTTP/1.1\r\n";
+    let sleep = b"GET /sleep HTTP/1.1\r\n";
 
     let (status_line, filename) = if buffer.starts_with(get) {
+        ("HTTP/1.1 200 OK", "hello.html")
+    } else if buffer.starts_with(sleep) { // Simulating a slow request
+        thread::sleep(Duration::from_secs(5));
         ("HTTP/1.1 200 OK", "hello.html")
     } else {
         ("HTTP/1.1 404 NOT FOUND", "404.html")
