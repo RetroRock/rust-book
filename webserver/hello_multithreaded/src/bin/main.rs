@@ -12,18 +12,18 @@
 // This technique is just one of many ways to improve throughput of a web server. Other options are
 // the fork/join model and the single-threaded async I/O model
 
+use hello_multithreaded::ThreadPool;
 use std::fs;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
 use std::time::Duration;
-use hello_multithreaded::ThreadPool;
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap(); 
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     let pool = ThreadPool::new(4);
-
+    let name = "Bob".to_string();
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
@@ -48,7 +48,8 @@ fn handle_connection(mut stream: TcpStream) {
 
     let (status_line, filename) = if buffer.starts_with(get) {
         ("HTTP/1.1 200 OK", "hello.html")
-    } else if buffer.starts_with(sleep) { // Simulating a slow request
+    } else if buffer.starts_with(sleep) {
+        // Simulating a slow request
         thread::sleep(Duration::from_secs(5));
         ("HTTP/1.1 200 OK", "hello.html")
     } else {
