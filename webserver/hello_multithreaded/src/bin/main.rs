@@ -23,8 +23,8 @@ use std::time::Duration;
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     let pool = ThreadPool::new(4);
-    let name = "Bob".to_string();
-    for stream in listener.incoming() {
+
+    for stream in listener.incoming().take(2) {
         let stream = stream.unwrap();
 
         // Make new threads without a limit
@@ -37,6 +37,8 @@ fn main() {
             handle_connection(stream);
         });
     }
+
+    println!("Shutting down");
 }
 
 fn handle_connection(mut stream: TcpStream) {

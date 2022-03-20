@@ -9,7 +9,7 @@ use std::thread;
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>,
+    sender: mpsc::Sender<Message>,
 }
 
 // Type alias for a trait object that holds the type of closure that execute receives
@@ -67,8 +67,36 @@ impl ThreadPool {
         // The reason we use unwrap is that we know the failure case won't happen (The threads
         // continue executing as long as the pool exists), but the compiler
         // doensn't know that
-        self.sender.send(job).unwrap();
+        self.sender.send(Message::NewJob(job)).unwrap();
     }
+}
+
+// Docs: https://doc.rust-lang.org/stable/book/ch20-03-graceful-shutdown-and-cleanup.html
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        println!("Sending terminate message to all workers.");
+
+        // Two loops to prevent Deadlocks
+        for _ in &self.workers {
+            self.sender.send(Message::Terminate).unwrap();
+        }
+
+        println!("Shutting down all workers.");
+
+        for worker in &mut self.workers {
+            println!("Shutting down worker {}", worker.id);
+
+            // Take ownership of thread, leave None in place
+            if let Some(thread) = worker.thread.take() {
+                thread.join().unwrap();
+            }
+        }
+    }
+}
+
+enum Message {
+    NewJob(Job),
+    Terminate,
 }
 
 // Worker is a common term in pooling implementations. Think of people working in the kitchen at a
@@ -77,12 +105,27 @@ impl ThreadPool {
 
 struct Worker {
     id: usize,
-    thread: thread::JoinHandle<()>,
+    thread: Option<thread::JoinHandle<()>>,
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
         let thread = thread::spawn(move || loop {
+            let message = receiver.lock().unwrap().recv().unwrap();
+
+            match message {
+                Message::NewJob(job) => {
+                    println!("Worker {} got a job; executing.", id);
+
+                    job();
+                }
+                Message::Terminate => {
+                    println!("Worker {} was told to terminate.", id);
+
+                    break;
+                }
+            }
+
             // Call lock on the receiver to acquire the mutex, and the nwe call unwrap to panic on
             // any errors. Acquiring a lock might fail if the mutex is poisoned state, which can
             // happen if some other thread panicked while holding the lock reather than releasing
@@ -93,13 +136,11 @@ impl Worker {
             // receive jobs. With let job = receiver.lock().unwrap().recv().unwrap(); however, any
             // temporary values used in the expression on the right hand side of the equals sing
             // are immediately dropped when the let statement ends.
-            let job = receiver.lock().unwrap().recv().unwrap();
-
-            println!("Worker {} got a job; executing.", id);
-
-            job();
         });
 
-        Worker { id, thread }
+        Worker {
+            id,
+            thread: Some(thread),
+        }
     }
 }
